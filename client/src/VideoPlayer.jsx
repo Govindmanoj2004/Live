@@ -1,21 +1,57 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import flv from 'flv.js';
+import Plyr from 'plyr';
+import 'plyr/dist/plyr.css';
 
-const VideoPlayer = ({ streamKey }) => {
+const PlyrFlvPlayer = ({ streamKey }) => {
   const videoRef = useRef(null);
+  const playerRef = useRef(null);
 
   useEffect(() => {
+    // Initialize flv.js player
+    let flvPlayer;
     if (flv.isSupported()) {
-      const player = flv.createPlayer({
+      flvPlayer = flv.createPlayer({
         type: 'flv',
-        url: `http://localhost:8000/live/${streamKey}.flv`
+        url: `http://localhost:8000/live/${streamKey}.flv`,
       });
-      player.attachMediaElement(videoRef.current);
-      player.load();
+      flvPlayer.attachMediaElement(videoRef.current);
+      flvPlayer.load();
     }
+
+    // Initialize Plyr
+    playerRef.current = new Plyr(videoRef.current, {
+      controls: [
+        'play',
+        'progress',
+        'current-time',
+        'mute',
+        'volume',
+        'fullscreen',
+      ],
+      settings: ['quality', 'speed'],
+    });
+
+    return () => {
+      if (flvPlayer) {
+        flvPlayer.destroy();
+      }
+      if (playerRef.current) {
+        playerRef.current.destroy();
+      }
+    };
   }, [streamKey]);
 
-  return <video ref={videoRef} controls />;
+  return (
+    <div>
+      <video
+        ref={videoRef}
+        className='plyr__video-embed'
+        controls
+        style={{ width: '100%' }}
+      />
+    </div>
+  );
 };
 
-export default VideoPlayer;
+export default PlyrFlvPlayer;
